@@ -1,4 +1,5 @@
-#dev -> main PR 시, 태그 적용
+# Auto Versioning Action
+# major.minor.patch => V0.0.1
 name: Auto Versioning & Tagging
 
 on:
@@ -27,12 +28,31 @@ jobs:
           fi
           echo "LATEST_TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Bump Version
-        id: bump_version
+      - name: Determine Version Bump Based on PR Tags
+        id: determine_version
         run: |
-          OLD_TAG=${{ env.LATEST_TAG }}
-          # 기존 태그가 "v"로 시작한다고 가정하고, 버전을 증가
-          VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
+          # Get the tags from the PR or branch
+          PR_TAG=$(git log -1 --pretty=%B | grep -oP "(?<=#)(feature|bugfix|breaking)/\S+")
+
+          # Check for feature, bugfix, or breaking tags to determine version increment
+          if [[ "$PR_TAG" == *"breaking/"* ]]; then
+            # Increase MAJOR version
+            OLD_TAG=${{ env.LATEST_TAG }}
+            VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1+1".0.0"}')
+          elif [[ "$PR_TAG" == *"feature/"* ]]; then
+            # Increase MINOR version
+            OLD_TAG=${{ env.LATEST_TAG }}
+            VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2+1".0"}')
+          elif [[ "$PR_TAG" == *"bugfix/"* ]]; then
+            # Increase PATCH version
+            OLD_TAG=${{ env.LATEST_TAG }}
+            VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
+          else
+            # Default: Increase PATCH version
+            OLD_TAG=${{ env.LATEST_TAG }}
+            VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
+          fi
+
           NEW_TAG="v$VERSION"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
 
