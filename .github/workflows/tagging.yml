@@ -1,0 +1,39 @@
+#dev -> main PR 시, 태그 적용
+name: Auto Versioning & Tagging
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types: [opened, synchronize] #요거 synchronize 옵션 확인 필요. 만약 pr 후 커밋이 추가됐을때 버전이 두단계 올라가면 삭제 필요
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Latest Tag
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0 || echo "v0.0.0")
+          echo "LATEST_TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Bump Version
+        id: bump_version
+        run: |
+          OLD_TAG=${{ env.LATEST_TAG }}
+          VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
+          NEW_TAG="v$VERSION"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create and Push Tag
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git tag ${{ env.NEW_TAG }}
+          git push origin ${{ env.NEW_TAG }}
