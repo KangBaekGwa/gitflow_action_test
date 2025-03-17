@@ -20,7 +20,7 @@ jobs:
       - name: Get Latest Tag
         id: get_tag
         run: |
-          TAG=$(git describe --tags --abbrev=0 || echo "v0.0.0")
+          TAG=$(git tag --sort=-v:refname | head -n 1 || echo "v0.0.0")
           echo "LATEST_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Bump Version
