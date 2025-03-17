@@ -34,22 +34,21 @@ jobs:
           # Get the tags from the PR or branch
           PR_TAG=$(git log -1 --pretty=%B | grep -oP "(?<=#)(feature|bugfix|breaking)/\S+")
 
+          # Use the latest tag that we fetched earlier
+          OLD_TAG=${{ env.LATEST_TAG }}
+
           # Check for feature, bugfix, or breaking tags to determine version increment
           if [[ "$PR_TAG" == *"major/"* ]]; then
             # Increase MAJOR version
-            OLD_TAG=${{ env.LATEST_TAG }}
             VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1+1".0.0"}')
           elif [[ "$PR_TAG" == *"minor/"* ]]; then
             # Increase MINOR version
-            OLD_TAG=${{ env.LATEST_TAG }}
             VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2+1".0"}')
           elif [[ "$PR_TAG" == *"patch/"* ]]; then
             # Increase PATCH version
-            OLD_TAG=${{ env.LATEST_TAG }}
             VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
           else
             # Default: Increase PATCH version
-            OLD_TAG=${{ env.LATEST_TAG }}
             VERSION=$(echo $OLD_TAG | sed 's/v//' | awk -F. '{print $1"."$2"."$3+1}')
           fi
 
