@@ -4,7 +4,7 @@ name: Auto Versioning & Tagging
 on:
   pull_request:
     branches:
-      - dev
+      - main
     types: [opened, synchronize] #요거 synchronize 옵션 확인 필요. 만약 pr 후 커밋이 추가됐을때 버전이 두단계 올라가면 삭제 필요
 
 jobs:
